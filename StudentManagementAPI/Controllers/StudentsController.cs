@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using StudentManagementAPI.CustomFilters;
 using StudentManagementAPI.DTOs;
 using StudentManagementAPI.Model;
 using StudentManagementAPI.ServiceInterface;
 
 namespace StudentManagementAPI.Controllers
 {
+    [ServiceFilter(typeof(ModelValidationFilter))]
     [Route("api/[controller]")]
     [ApiController]
     public class StudentsController : ControllerBase

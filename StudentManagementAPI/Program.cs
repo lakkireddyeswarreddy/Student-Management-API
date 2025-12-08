@@ -4,6 +4,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using StudentManagementAPI.ApplicationDbContext;
+using StudentManagementAPI.CustomFilters;
 using StudentManagementAPI.CustomMiddleware;
 using StudentManagementAPI.Repository;
 using StudentManagementAPI.RepositoryInterface;
@@ -62,7 +63,14 @@ builder.Services.AddSwaggerGen( c =>
     c.UseAllOfToExtendReferenceSchemas();
 });
 
-builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ExecutionTimeFilter>();
+    options.Filters.Add<CustomExceptionFilter>();
+
+}).AddNewtonsoftJson();
+
+builder.Services.AddScoped<ModelValidationFilter>();
 
 //builder.Logging.ClearProviders();
 //builder.Logging.AddConsole(options =>
