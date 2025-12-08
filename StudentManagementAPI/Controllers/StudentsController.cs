@@ -13,15 +13,22 @@ namespace StudentManagementAPI.Controllers
     {
         private readonly IStudentService studentService;
 
-        public StudentsController(IStudentService studentService)
+        private readonly ILogger<StudentsController> _logger;
+
+        public StudentsController(IStudentService studentService, ILogger<StudentsController> logger)
         {
             this.studentService = studentService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async  Task<ActionResult<ICollection<Student>>> GetStudents()
         {
+            _logger.Log(LogLevel.Information, "Retrieving all the students");
+
             var students =  await studentService.GetStudents();
+
+            _logger.Log(LogLevel.Information, "Successfully retrieved all the students data");
 
             return Ok(students);
         }
@@ -30,12 +37,19 @@ namespace StudentManagementAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Student>> GetStudent(long id)
         {
+            _logger.LogInformation("Retrieving student data with ID : {id}", id);
+
             var student = await studentService.GetStudentById(id);
 
             if (student == null)
             {
+                _logger.LogInformation("No student data found with matching ID : {id}", id);
+
                 return NotFound();
             }
+
+            _logger.LogInformation("Successfully retrieved student data with ID : {id}", id);
+
             return Ok(student);
         }
 
