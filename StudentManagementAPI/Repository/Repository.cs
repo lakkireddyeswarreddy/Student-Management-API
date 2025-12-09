@@ -24,7 +24,7 @@ namespace StudentManagementAPI.Repository
             return await _appDbContext.Set<T>().ToListAsync();
         }
 
-        public async Task<T> GetById(long id)
+        public async Task<T> GetById(dynamic id)
         {
             return await _appDbContext.Set<T>().FindAsync(id);
         }
@@ -40,6 +40,12 @@ namespace StudentManagementAPI.Repository
         public async Task Update(T item)
         {
             _appDbContext.Set<T>().Update(item);
+            await _appDbContext.SaveChangesAsync();
+        }
+
+        public async Task Register(T item)
+        {
+            _appDbContext.Set<T>().AddAsync(item);
             await _appDbContext.SaveChangesAsync();
         }
     }

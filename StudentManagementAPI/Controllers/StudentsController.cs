@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using StudentManagementAPI.CustomFilters;
@@ -8,6 +9,7 @@ using StudentManagementAPI.ServiceInterface;
 
 namespace StudentManagementAPI.Controllers
 {
+    [Authorize(Policy = "IITMTeacherOnly")]
     [ServiceFilter(typeof(ModelValidationFilter))]
     [Route("api/[controller]")]
     [ApiController]

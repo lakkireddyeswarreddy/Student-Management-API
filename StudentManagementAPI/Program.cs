@@ -1,15 +1,23 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Console;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using StudentManagementAPI.ApplicationDbContext;
 using StudentManagementAPI.CustomFilters;
 using StudentManagementAPI.CustomMiddleware;
+using StudentManagementAPI.Model;
 using StudentManagementAPI.Repository;
 using StudentManagementAPI.RepositoryInterface;
+using StudentManagementAPI.Service;
 using StudentManagementAPI.ServiceInterface;
 using StudentManagementAPI.Services;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +58,8 @@ Log.Logger = new LoggerConfiguration()
 
 // Add services to the container.
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IPasswordHasher<Teacher>, PasswordHasher<Teacher>>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -61,6 +71,7 @@ builder.Services.AddSwaggerGen( c =>
 {
     c.SupportNonNullableReferenceTypes();
     c.UseAllOfToExtendReferenceSchemas();
+
 });
 
 builder.Services.AddControllers(options =>
@@ -85,6 +96,43 @@ builder.Services.AddScoped<ModelValidationFilter>();
 
 builder.Host.UseSerilog();
 
+var jwtKey = builder.Configuration["Jwt:Key"];
+
+var jwtBytes = Encoding.UTF8.GetBytes(jwtKey);
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+
+//var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtIssuer,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(jwtBytes)
+    };
+
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("IITMTeacherOnly", policy =>
+    {
+        policy.RequireAssertion(context =>
+        {
+            var emailClaim = context.User.FindFirst(c => c.Type == ClaimTypes.Email);
+            if (emailClaim == null) return false;
+
+            return emailClaim.Value.EndsWith("iitm.ac.in", StringComparison.OrdinalIgnoreCase);
+        });
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -101,6 +149,8 @@ app.UseHttpsRedirection();
 app.UseMiddleware<LoggingMiddleware>();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

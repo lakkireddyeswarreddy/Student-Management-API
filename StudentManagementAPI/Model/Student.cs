@@ -14,6 +14,9 @@ namespace StudentManagementAPI.Model
         //[Required(ErrorMessage = "Email address should not be empty."), EmailAddress(ErrorMessage = "Email is not in correct format.")]
         //public string Email { get; set; }
 
+        //[Required(ErrorMessage="Password cannot be null")]
+        //public string Password { get; set; }
+
         //[Required(ErrorMessage = "Roll no should not be empty.")]
         //public string RollNo { get; set; }
         public int Age { get; set; }
