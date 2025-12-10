@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +12,9 @@ namespace StudentManagementAPI.Controllers
 {
     [Authorize(Policy = "IITMTeacherOnly")]
     [ServiceFilter(typeof(ModelValidationFilter))]
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class StudentsController : ControllerBase
     {
         private readonly IStudentService studentService;

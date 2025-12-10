@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using StudentManagementAPI.ApplicationDbContext;
+using StudentManagementAPI.BackgroundServices;
 using StudentManagementAPI.CustomFilters;
 using StudentManagementAPI.CustomMiddleware;
 using StudentManagementAPI.Model;
@@ -133,6 +135,32 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new QueryStringApiVersionReader(),
+        new HeaderApiVersionReader()
+        );
+
+}).AddMvc();
+
+var MyAllowSpecificOrigins = "myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+
+    });
+});
+
+builder.Services.AddHostedService<CurrentTimeService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -149,6 +177,8 @@ app.UseHttpsRedirection();
 app.UseMiddleware<LoggingMiddleware>();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+app.UseCors();
 
 app.UseAuthentication();
 
